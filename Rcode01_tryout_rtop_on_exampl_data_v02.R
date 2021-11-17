@@ -107,6 +107,39 @@ plot(sdf)
 # save as shape file
 raster::shapefile(df01, "dummy_points_S_Norway.shp",overwrite=TRUE )
 #_______________________________________________________________________________
+# https://stackoverflow.com/questions/47203587/r-delimit-a-voronoi-diagram-according-to-a-map
+# Try cutting voronoi tiles in Norway
+library(dismo)
+library(rgeos)
+library(deldir)
+library(maptools)
+
+df03 <- df02
+coordinates(df03) <- c("longitude", "latitude")
+proj4string(df03) <- CRS("+proj=longlat +datum=WGS84")
+
+data(wrld_simpl)
+nor <- wrld_simpl[wrld_simpl$ISO3 == 'NOR', ]
+
+# transform to a planar coordinate reference system (as suggested by @Ege Rubak)
+prj <- CRS("+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80  +units=m")
+prj <- CRS("+proj=longlat +datum=WGS84")
+df03 <- spTransform(df03, prj)
+nor <- spTransform(nor, prj)
+# voronoi function from 'dismo'
+# note the 'ext' argument to spatially extend the diagram
+vor <- dismo::voronoi(df03, ext=extent(nor) + 10)
+# use intersect to maintain the attributes of the voronoi diagram
+r <- intersect(vor, nor)
+plot(r, col=rainbow(length(r)), lwd=3)
+points(df03, pch = 20, col = "white", cex = 3)
+points(df03, pch = 20, col = "red", cex = 2)
+#df03$CONC
+# or, to see the names of the areas
+spplot(r, 'CONC')
+
+#_______________________________________________________________________________
+#_______________________________________________________________________________
 # define dummy predicted locations from the dummy input observations
 #_______________________________________________________________________________
 #make standard deviation for latitude 
@@ -153,6 +186,14 @@ unlink("NVEData", recursive=TRUE)
 unlink("Metadata", recursive=TRUE)
 #Check if a path for the directory for the rivers have been defined
 
+#define the path for the directory where the unzipped downloaded river files are placed
+#rpath_Norway_rivers <- "NVE_60751B14_1635507782111_11488/NVEData/Elv"
+#paste path together
+rpath_NR <- paste(wd00,"/",rpath_Norway_rivers,sep="")
+rpath_NR <- "/home/hal9000/Documents/Documents/NIVA_Ansaettelse_2021/fish_eDNA_210130/NVE_60751B14_1635507782111_11488/NVEData/Elv"
+# read in the river shape files 
+rnet = readOGR(rpath_NR, "Elv_Hovedelv")
+rpath_Norway_rivers <- "NVEData/Elv"
 # if not then get the zip file. Unpack it. Make a path to the river shape 
 #directory and then remove the zip file
 if (!exists("rpath_Norway_rivers"))
@@ -168,13 +209,6 @@ if (!exists("rpath_Norway_rivers"))
 }
 
 
-#define the path for the directory where the unzipped downloaded river files are placed
-#rpath_Norway_rivers <- "NVE_60751B14_1635507782111_11488/NVEData/Elv"
-#paste path together
-rpath_NR <- paste(wd00,"/",rpath_Norway_rivers,sep="")
-rpath_NR <- "/home/hal9000/Documents/Documents/NIVA_Ansaettelse_2021/fish_eDNA_210130/NVE_60751B14_1635507782111_11488/NVEData/Elv"
-# read in the river shape files 
-rnet = readOGR(rpath_NR, "Elv_Hovedelv")
 #turn off previous plots
 dev.off()
 #plot the river network
