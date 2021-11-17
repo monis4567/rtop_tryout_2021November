@@ -57,6 +57,7 @@ rm(list=ls())
 # if you use projects in Rstudio, you don't need to worry about this :-)
 rpath = "."
 #wd00 <- "/home/hal9000/Documents/Documents/NIVA_Ansaettelse_2021/fish_eDNA_210130/test_example_rtop"
+rpath <- "/home/hal9000/Documents/Documents/NIVA_Ansaettelse_2021/fish_eDNA_210130/rtop_on_virik_eDNA/rtop_tryout_2021November" 
 #rpath <- wd00
 wd00 <- rpath
 setwd(wd00)
@@ -106,6 +107,7 @@ proj4string(sdf)<- CRS("EPSG:4326") # set CRS to WGS84
 plot(sdf)
 # save as shape file
 raster::shapefile(df01, "dummy_points_S_Norway.shp",overwrite=TRUE )
+
 #_______________________________________________________________________________
 # https://stackoverflow.com/questions/47203587/r-delimit-a-voronoi-diagram-according-to-a-map
 # Try cutting voronoi tiles in Norway
@@ -137,8 +139,12 @@ points(df03, pch = 20, col = "red", cex = 2)
 #df03$CONC
 # or, to see the names of the areas
 spplot(r, 'CONC')
+# save as shape file
+raster::shapefile(r, "dummy_points_S_Norway_02.shp",overwrite=TRUE )
 
 #_______________________________________________________________________________
+
+
 #_______________________________________________________________________________
 # define dummy predicted locations from the dummy input observations
 #_______________________________________________________________________________
@@ -175,7 +181,43 @@ new_prj_prd <- CRS("EPSG:25832")
 dfUTM32_prd<-spTransform(df_pred01,new_prj_prd)
 # save as shape file
 raster::shapefile(df_pred01, "predicted_dummy_points_S_Norway.shp",overwrite=TRUE )
+#_______________________________________________________________________________
+# Try cutting voronoi tiles in Norway
+library(dismo)
+library(rgeos)
+library(deldir)
+library(maptools)
 
+df_pred03 <- df_pred02
+df_pred03$latitude <- df_pred02$predict_lat
+df_pred03$longitude <- df_pred02$predict_lon
+df_pred03$predict_lat <- NULL
+df_pred03$predict_lon <- NULL
+coordinates(df_pred03) <- c("longitude", "latitude")
+proj4string(df_pred03) <- CRS("+proj=longlat +datum=WGS84")
+
+data(wrld_simpl)
+nor <- wrld_simpl[wrld_simpl$ISO3 == 'NOR', ]
+
+# transform to a planar coordinate reference system (as suggested by @Ege Rubak)
+prj <- CRS("+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80  +units=m")
+prj <- CRS("+proj=longlat +datum=WGS84")
+df_pred03 <- spTransform(df_pred03, prj)
+nor <- spTransform(nor, prj)
+# voronoi function from 'dismo'
+# note the 'ext' argument to spatially extend the diagram
+vor <- dismo::voronoi(df_pred03, ext=extent(nor) + 10)
+# use intersect to maintain the attributes of the voronoi diagram
+r <- intersect(vor, nor)
+plot(r, col=rainbow(length(r)), lwd=3)
+points(df_pred03, pch = 20, col = "white", cex = 3)
+points(df_pred03, pch = 20, col = "red", cex = 2)
+# or, to see the names of the areas
+#spplot(r, 'CONC')
+# save as shape file
+raster::shapefile(r, "pred_dummy_points_S_Norway_02.shp",overwrite=TRUE )
+
+#_______________________________________________________________________________
 # To get a map of rivers in Norway look at these websites
 # see: https://gis.stackexchange.com/questions/317744/seeking-norwegian-waterlines-and-water-bodies-shapefile
 # and see: https://kartkatalog.geonorge.no/metadata/norges-vassdrags-og-energidirektorat/vannforekomster/b203e422-5270-4efc-93a5-2073725c43ef
@@ -257,6 +299,9 @@ raster::shapefile(sdf.p02, "predLoc03.shp",overwrite=TRUE )
 obLoc3=rgdal::readOGR(rpath, "obsLoc03")
 prLoc3=rgdal::readOGR(rpath, "predLoc03")
 
+obLoc4=rgdal::readOGR(rpath, "dummy_points_S_Norway_02")
+prLoc4=rgdal::readOGR(rpath, "pred_dummy_points_S_Norway_02")
+
 dev.off()
 #plot the river network
 plot(rnet, col="blue")
@@ -265,34 +310,78 @@ plot(df_pred01, add=T, col="yellow")
 # add the observed points to the plot
 plot(sdf, add=T, pch=21, col="red")
 # add polygons on top
-plot(obLoc3, add=T, border = "pink")
-plot(prLoc3, add=T, border = "brown")
+plot(obLoc4, add=T, border = "pink")
+plot(prLoc4, add=T, border = "brown")
 
 
 
-library(raster)
-
-p <-  obLoc3
-pols <- list(p,p)
-conc.po <- df02$CONC
-
-polsconc <- lapply(1:length(pols), function(i) {
-  p <- pols[[i]]
-  p$conc.po <- conc.po[i]
-  p
-} )
-
-plot(polsconc)
-p
-
-polsdatetime 
-class(prLoc3)
 obs <- df02$CONC
 
-rtopObj2	=	createRtopObject(obLoc3, prLoc3,
+rtopObj2	=	createRtopObject(obLoc4, prLoc4,
                            formulaString = obs~1, 
                            params = list(gDist=TRUE, rresol = 25))
 is.null(rtopObj2)
 
+
+#https://rdrr.io/rforge/rtop/man/rtop-package.html
+# There are help-methods available in cases when data are not available as
+# shape-files, or when the observations are not part of the shape-files. 
+# See readAreaInfo and readAreas.
+file.obs <- "dummy_points_S_Norway_02.shp"
+file.pre <- "pred_dummy_points_S_Norway_02.shp"
+getwd()
+wd00
+readAreaInfo(file.obs, id="ID")
+readAreas(file.obs, id="ID")
+
+# A call to rtopVariogram adds the sample variogram to the object, whereas
+# rtopFitVariogram fits a variogram model. The last function will call 
+# rtopVariogram if rtopObj does not contain a sample variogram.
+rtopObj2 = rtopVariogram(rtopObj2)
+rtopObj2 = rtopFitVariogram(rtopObj2)
+# The function checkVario is useful to produce some diagnostic plots for 
+# the sample variogram and the fitted variogram model.
+rtopObj2 <- checkVario(rtopObj2)
+
 #_#_
+rtopObj2 = checkVario(rtopObj2, cloud = TRUE,
+                     identify = TRUE,
+                     acor = 0.000001)
+
+
+rtopObj2 = rtopKrige(rtopObj2, cv=TRUE)
+
+predictions = rtopObj2$predictionLocations
+sstot = sum((predictions$obs - mean(predictions$obs))^ 2)
+rtopsserr = sum((predictions$obs - predictions$var1.pred)^ 2)
+rtoprsq = 1 - rtopsserr/sstot
+summary(predictions)
+library(automap)
+automap::automapPlot(predictions)
+plot(predictions)
+
+rtopObj = rtopKrige(rtopObj)
+
+
+rnet = readOGR(rpath, "riverNetwork")
+pred = rtopObj$predictions
+#pred$
+rnet$pred = pred$var1.pred[match(rnet$EZGA, pred$EZGID)]
+spplot(rnet, "pred", col.regions = bpy.colors())
+
+
+at = seq(0, max(rnet$pred, na.rm =TRUE), 0.01)
+cols = bpy.colors(length(at))
+cobs = observations@data[, c("XSTATION", "YSTATION", "obs")]
+names(cobs) = c("x", "y", "obs")
+coordinates(cobs) = ~ x + y
+cobs$class = findInterval(cobs$obs, at)
+
+
+spplot(rnet, "pred", col.regions = bpy.colors(), at = at,
+       panel = function(x, y, ...){
+         panel.polygonsplot(x, y, ...)
+         sp.points(cobs[, "obs"], cex = 1, pch = 16, col = cols[cobs$class])})
+
+writeOGR(rnet, dsn, layer, "ESRI Shapefile")
 
