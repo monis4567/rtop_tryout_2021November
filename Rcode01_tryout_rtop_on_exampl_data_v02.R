@@ -321,8 +321,6 @@ rtopObj2	=	createRtopObject(obLoc4, prLoc4,
                            formulaString = obs~1, 
                            params = list(gDist=TRUE, rresol = 25))
 is.null(rtopObj2)
-
-
 #https://rdrr.io/rforge/rtop/man/rtop-package.html
 # There are help-methods available in cases when data are not available as
 # shape-files, or when the observations are not part of the shape-files. 
@@ -341,7 +339,10 @@ rtopObj2 = rtopVariogram(rtopObj2)
 rtopObj2 = rtopFitVariogram(rtopObj2)
 # The function checkVario is useful to produce some diagnostic plots for 
 # the sample variogram and the fitted variogram model.
+
+#This part does not work
 rtopObj2 <- checkVario(rtopObj2)
+rtopObj2 <- checkVario(rtopObj2, observations=obLoc4$CONC)
 
 #_#_
 rtopObj2 = checkVario(rtopObj2, cloud = TRUE,
