@@ -58,6 +58,8 @@ rm(list=ls())
 rpath = "."
 #wd00 <- "/home/hal9000/Documents/Documents/NIVA_Ansaettelse_2021/fish_eDNA_210130/test_example_rtop"
 rpath <- "/home/hal9000/Documents/Documents/NIVA_Ansaettelse_2021/fish_eDNA_210130/rtop_on_virik_eDNA/rtop_tryout_2021November" 
+
+
 #rpath <- wd00
 wd00 <- rpath
 setwd(wd00)
