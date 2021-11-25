@@ -453,7 +453,8 @@ p02 <-
                        guide = guide_colorbar(order = 1)) +
   
   #define limits of map
-  ggplot2::coord_sf(xlim = c(9.6, 11),
+  ggplot2::coord_sf( #xlim = c(9.6, 11),
+                    xlim = c(9.8, 10.4),
                     ylim = c(59, 59.3), 
                     default_crs = sf::st_crs(4326),
                     
