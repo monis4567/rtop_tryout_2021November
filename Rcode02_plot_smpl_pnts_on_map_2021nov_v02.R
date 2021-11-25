@@ -360,7 +360,7 @@ cl <- cbbPalette
 
 #st_crs(norw_map)
 # define level of jitter on each point
-jitlvl <- 0.010
+jitlvl <- 0.004
 
 # plot  on map
 # also see : https://github.com/tidyverse/ggplot2/issues/2037
@@ -405,7 +405,7 @@ library(dplyr)
 tbl03 <- df02 %>%                   # Specify data frame
   dplyr::group_by(Sample,gen_specnm2) %>%  # Specify group indicator
   dplyr::summarise_at(vars(SQ),            # Specify column
-               list(SQm = mean))
+                      list(SQm = mean))
 #make it a data frame
 df03 <- as.data.frame(tbl03)
 # set NAs to zero
@@ -423,7 +423,7 @@ df03$SQmean <- df03$SQm
 #
 #getwd()
 write.table(df03,"mean_eDNA_conc_virik.csv", sep=",",
-           dec=".")
+            dec=".")
 #_______________________________________________________________________________
 # also see : https://github.com/tidyverse/ggplot2/issues/2037
 # also see : https://github.com/tidyverse/ggplot2/issues/2037
@@ -444,7 +444,7 @@ p02 <-
   # define outline of each pch point
   scale_color_manual(values=c("purple","red")) +
   # split in mulitple plots per group
-  facet_wrap(~gen_specnm2, nrow = 2, ncol=1) + #'facet_wrap' subsets by column value in dataframe
+  facet_wrap(~gen_specnm2, nrow = 1, ncol=2) + #'facet_wrap' subsets by column value in dataframe
   #define colour gradient for fill
   # scale_fill_gradient2(low = "white", mid = "white", high = "blue",
   #                      guide = guide_colorbar(order = 1)) +
@@ -453,12 +453,12 @@ p02 <-
                        guide = guide_colorbar(order = 1)) +
   
   #define limits of map
-  ggplot2::coord_sf( #xlim = c(9.6, 11),
-                    xlim = c(9.8, 10.4),
-                    ylim = c(59, 59.3), 
-                    default_crs = sf::st_crs(4326),
-                    
-                    expand = FALSE)
+  ggplot2::coord_sf( xlim = c(10.15, 10.35) ,
+                     #xlim = c(9.8, 10.4),
+                     ylim = c(59.065, 59.265), 
+                     default_crs = sf::st_crs(4326),
+                     
+                     expand = FALSE)
 
 p02 <- p02 + xlab("longitude") + ylab("latitude")
 # see the plot
@@ -490,7 +490,17 @@ if (!exists("rpath_Norway_rivers"))
 }
 
 
-p03 <- p02 + geom_path(data = rnet, aes(x = long, y = lat, group = group),
+p02b <- p02
+# you will have to change the legend for all legends
+p02b <- p02b + labs(color='species')
+p02b <- p02b + labs(fill='SQ mean ')
+p02b <- p02b + labs(shape='eDNA presence')
+# Label appearance ##http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
+# filltxc = rep("black", noofspcsnms)
+# filltxc[10] <- "red"
+#p02b <- p02b + theme(legend.text = element_text(colour="blue", size = 10, face = "italic"))
+
+p03 <- p02b + geom_path(data = rnet, aes(x = long, y = lat, group = group),
                        lwd=0.4,
                        color="blue")
 p03
@@ -517,12 +527,16 @@ figname04 <- paste0(fnm04,".pdf")
 
 
 if(bSaveFigures==T){
-  ggsave(p,file=figname03,width=210,height=297,
+  ggsave(p,file=figname03,
+         #width=210,height=297,
+         width=297,height=210,
          units="mm",dpi=300)
 }
 
 if(bSaveFigures==T){
-  ggsave(p,file=figname04,width=210,height=297,
+  ggsave(p,file=figname04,
+         #width=210,height=297,
+         width=297,height=210,
          units="mm",dpi=300)
 }
 
