@@ -427,16 +427,18 @@ write.table(df03,"mean_eDNA_conc_virik.csv", sep=",",
 #_______________________________________________________________________________
 # also see : https://github.com/tidyverse/ggplot2/issues/2037
 # also see : https://github.com/tidyverse/ggplot2/issues/2037
+
+norw_map_sp <- ne_countries(country="norway",scale = 10, returnclass = "sp")
+
 p02 <- 
-  ggplot(data = norw_map) +
-  #ggplot(st_transform(norw_map, 9122)) +
-  geom_sf(color = "black", fill = "azure3") +
-  geom_jitter(data = df03, 
-              aes(x = dlon, y = dlat, #, 
+  ggplot() +
+  geom_polygon(data=norw_map_sp,aes(x = long, y = lat, group = group),color = "black", fill = "azure3") +
+  geom_jitter(data = df03,
+              aes(x = dlon, y = dlat, #,
                   color=gen_specnm2,
                   fill=SQmean,
                   shape=eval1),
-              width = jitlvl, #0.07, jitter width 
+              width = jitlvl, #0.07, jitter width
               height = jitlvl, #0.07, # jitter height
               size = 3) +
   #define shape of points
@@ -446,24 +448,17 @@ p02 <-
   # split in mulitple plots per group
   facet_wrap(~gen_specnm2, nrow = 1, ncol=2) + #'facet_wrap' subsets by column value in dataframe
   #define colour gradient for fill
-  # scale_fill_gradient2(low = "white", mid = "white", high = "blue",
-  #                      guide = guide_colorbar(order = 1)) +
-  #scale_fill_gradientn(colors = heat.colors(10),
   scale_fill_gradientn(colors = alpha(c("white","red","black"),0.6),
                        guide = guide_colorbar(order = 1)) +
-  
   #define limits of map
-  ggplot2::coord_sf( xlim = c(10.15, 10.35) ,
-                     #xlim = c(9.8, 10.4),
-                     ylim = c(59.065, 59.265), 
-                     default_crs = sf::st_crs(4326),
-                     
-                     expand = FALSE)
+  ggplot2::coord_sf(xlim = c(10.15, 10.35) ,
+                    ylim = c(59.065, 59.265),
+                    #default_crs = sf::st_crs(4326),
+                    expand = FALSE) +
+  xlab("longitude") + ylab("latitude")
 
-p02 <- p02 + xlab("longitude") + ylab("latitude")
 # see the plot
 p02
-
 
 
 
