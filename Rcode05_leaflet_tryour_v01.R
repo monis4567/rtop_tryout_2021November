@@ -377,3 +377,7 @@ library(mapview)
 getwd()
 pthf06 <- paste(wd00,"/mapplot_v06_leaflet.png",sep="")
 mapshot(SNorway_map, file = pthf06)
+
+getwd()
+pthf07 <- paste(wd00,"/input_eDNA_Elucius_from_R05.csv",sep="")
+write_csv(df04,pthf07)
