@@ -6,6 +6,10 @@
 # As initially presented here:
 # https://niva.brage.unit.no/niva-xmlui/handle/11250/2997014
 
+# the aim with this code is to produce figures that
+# resembles Fig 6, Fig 7 and Fig 9 in this paper:
+# https://hess.copernicus.org/articles/10/277/2006/
+
 #____________________________________________________________________________#
 #remove everything in the working environment, without a warning!!
 rm(list=ls())
