@@ -195,6 +195,9 @@ rpath_NR <- paste(wd00,"/",rpath_Norway_rivers,sep="")
 # read in the river shape files 
 rnet = rgdal::readOGR(rpath_NR, "Elv_Hovedelv")
 rpath_Norway_rivers <- "NVEData/Elv"
+# remove directories recursively
+unlink("Metadata", recursive=TRUE)
+unlink("NVEData", recursive=TRUE)
 
 # #turn off previous plots
 # #dev.off()
